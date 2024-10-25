@@ -1,0 +1,39 @@
+version: "3.7"
+services:
+  qbittorrent_ts:
+    image: tailscale/tailscale:latest
+    container_name: qbittorrent_ts
+    hostname: qbittorrent
+    environment:
+      - TS_AUTHKEY=tskey-client-xxxxxxxxxxxxxx?ephemeral=false
+      - TS_EXTRA_ARGS=--advertise-tags=tag:container --reset
+      - TS_SERVE_CONFIG=/config/qbittorrent.json
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+    volumes:
+      - /media/qbittorrent/tailscale/config:/config
+      - /media/qbittorrent/tailscale/state:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    restart: unless-stopped
+    
+  qbittorrent:
+    image: linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Lisbon
+      - WEBUI_PORT=8080
+      - TORRENTING_PORT=6881
+    volumes:
+      - /media/qbittorrent/config:/config
+      - /data:/downloads
+      - /media:/media
+    network_mode: service:qbittorrent_ts
+    depends_on:
+      - qbittorrent_ts
+    restart: unless-stopped
+ 

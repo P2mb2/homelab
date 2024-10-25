@@ -1,0 +1,29 @@
+version: "3.7"
+services:
+  <<container_name>>_ts:
+    image: tailscale/tailscale:latest
+    container_name: <<container_name>>_ts
+    hostname: <<container_name>>
+    environment:
+      - TS_AUTHKEY=<<auth_key>>?ephemeral=false
+      - TS_EXTRA_ARGS=--advertise-tags=tag:container --reset
+      - TS_SERVE_CONFIG=/config/<<container_name>>.json
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+    volumes:
+      - /docs/<<container_name>>/tailscale/config:/config
+      - /docs/<<container_name>>/tailscale/state:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    restart: unless-stopped
+    
+  <<container_name>>:
+    image: <<container_image>>
+    container_name: <<container_name>>
+    network_mode: service:<<container_name>>_ts
+    depends_on:
+      - <<container_name>>_ts
+    restart: unless-stopped
+ 

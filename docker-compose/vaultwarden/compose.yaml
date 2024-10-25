@@ -1,0 +1,36 @@
+version: "3.7"
+services:
+  vaultwarden_ts:
+    image: tailscale/tailscale:latest
+    container_name: vaultwarden_ts
+    hostname: vaultwarden
+    ports: # To reach also without tailscale (Cloudflare tunnel)
+      - 8008:80
+    environment:
+      - TS_AUTHKEY=tskey-client-xxxxxxx?ephemeral=false
+      - TS_EXTRA_ARGS=--advertise-tags=tag:container --reset
+      - TS_SERVE_CONFIG=/config/vaultwarden.json
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+    volumes:
+      - /docs/vaultwarden/tailscale/config:/config
+      - /docs/vaultwarden/tailscale/vaultwarden_ts/state:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    restart: unless-stopped
+    
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    network_mode: service:vaultwarden_ts    
+    environment:
+        - ADMIN_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    depends_on:
+      - vaultwarden_ts
+    volumes:
+      - /docs/vaultwarden/config:/config
+      - /docs/vaultwarden/data:/data
+    restart: unless-stopped
+ 
