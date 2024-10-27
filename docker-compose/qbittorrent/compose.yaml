@@ -18,6 +18,8 @@ services:
       - net_admin
       - sys_module
     restart: unless-stopped
+    healthcheck:
+      test: tailscale status --peers=false --json | grep -q 'Online...true'
     
   qbittorrent:
     image: linuxserver/qbittorrent:latest

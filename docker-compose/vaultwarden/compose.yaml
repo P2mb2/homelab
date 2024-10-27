@@ -4,14 +4,14 @@ services:
     image: tailscale/tailscale:latest
     container_name: vaultwarden_ts
     hostname: vaultwarden
-    ports: # To reach also without tailscale (Cloudflare tunnel)
-      - 8008:80
     environment:
-      - TS_AUTHKEY=tskey-client-xxxxxxx?ephemeral=false
+      - TS_AUTHKEY=tskey-client-xxxxxxxxxxxxxx?ephemeral=false
       - TS_EXTRA_ARGS=--advertise-tags=tag:container --reset
       - TS_SERVE_CONFIG=/config/vaultwarden.json
       - TS_STATE_DIR=/var/lib/tailscale
       - TS_USERSPACE=false
+    ports: # To reach also withour tailscale (Cloudflare tunnel)
+      - 8008:80
     volumes:
       - /docs/vaultwarden/tailscale/config:/config
       - /docs/vaultwarden/tailscale/vaultwarden_ts/state:/var/lib/tailscale
@@ -20,17 +20,47 @@ services:
       - net_admin
       - sys_module
     restart: unless-stopped
+    healthcheck:
+      test: tailscale status --peers=false --json | grep -q 'Online...true'
     
   vaultwarden:
     image: vaultwarden/server:latest
     container_name: vaultwarden
     network_mode: service:vaultwarden_ts    
     environment:
-        - ADMIN_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        - ADMIN_TOKEN=sdflgokajs2334#$asdfkahfgearg
     depends_on:
       - vaultwarden_ts
     volumes:
       - /docs/vaultwarden/config:/config
       - /docs/vaultwarden/data:/data
     restart: unless-stopped
- 
+
+  vaultwarden-backup:
+    image: bruceforce/vaultwarden-backup
+    container_name: vaultwarden_backup
+    restart: unless-stopped
+    init: true
+    depends_on:
+      - vaultwarden
+    volumes:
+      - /docs/vaultwarden/data:/data
+      - /docs/vaultwarden/backup:/backup
+    environment:
+      - LOG_DIR=/backup/logs
+      - LOG_LEVEL=INFO
+      - BACKUP_ADD_DATABASE=true
+      - BACKUP_ADD_ATTACHMENTS=true
+      - BACKUP_ADD_CONFIG_JSON=true
+      - TZ=Europe/Lisbon
+      - BACKUP_ON_STARTUP=true 
+      - BACKUP_DIR=/backup
+      - TIMESTAMP=true
+      - CRON_TIME=0 4 * * *
+      - UID=1000
+      - GID=1000
+      #- BACKUP_DIR_PERMISSIONS=777
+      #- BACKUP_DIR_PERMISSIONS=-1
+      #- LOG_DIR_PERMISSIONS=-1
+      #- DELETE_AFTER=1
+      #- ENCRYPTION_PASSWORD=testtest
