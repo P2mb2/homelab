@@ -1,0 +1,42 @@
+version: "3.7"
+services:
+  calibre_ts:
+    image: tailscale/tailscale:latest
+    container_name: calibre_ts
+    hostname: calibre
+    ports:
+      - 8083:8083
+    environment:
+      - TS_AUTHKEY=tskey-client-kBBvvuvb6R11CNTRL-wCALihusTi3UGg2oeEkgh3hGF5wU3ZVx?ephemeral=false
+      - TS_EXTRA_ARGS=--advertise-tags=tag:container --reset
+      - TS_SERVE_CONFIG=/config/calibre.json
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+    volumes:
+      - /docs/calibre/tailscale/config:/config
+      - /docs/calibre/tailscale/state:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    restart: unless-stopped
+    healthcheck:
+      test: tailscale status --peers=false --json | grep -q 'Online...true'
+    
+  calibre:
+    image: lscr.io/linuxserver/calibre-web:latest
+    container_name: calibre
+    network_mode: service:calibre_ts
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Lisbon
+      - DOCKER_MODS=linuxserver/mods:universal-calibre
+      - OAUTHLIB_RELAX_TOKEN_SCOPE=1
+    volumes:
+      - /docs/calibre/data:/config
+      - /docs/calibre/library:/books
+    depends_on:
+      - calibre_ts
+    restart: unless-stopped
+ 
