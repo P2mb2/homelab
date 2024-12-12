@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:17.3.7-ce.0
+    container_name: gitlab
+    restart: always
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'https://gitlab.jotapombo.org'
+    ports:
+     - '30775:22'
+     - '30776:5050'
+     - '30777:80'
+     - '30778:443'
+    volumes:
+     - /mylab/gitlab/config/gitlab:/etc/gitlab
+     - /mylab/gitlab/logs/gitlab:/var/log/gitlab
+     - /mylab/gitlab/data:/var/opt/gitlab
+    networks:
+      - gitlab
+
+  gitlab-runner:
+    image: gitlab/gitlab-runner:alpine
+    container_name: gitlab_runner
+    restart: unless-stopped
+    links:
+        - gitlab
+    depends_on:
+      - gitlab
+    volumes:
+      - /mylab/gitlab/config/gitlab-runner:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - gitlab
+
+networks:
+  gitlab:
