@@ -1,0 +1,32 @@
+version: "3.7"
+services:
+  openclaw_ts:
+    image: tailscale/tailscale:latest
+    container_name: openclaw_ts
+    hostname: openclaw
+    environment:
+      - TS_AUTHKEY=tskey-auth-kFGyCHMXC211CNTRL-iQBpnd8mGo2qNs3fCrz9n2B5ytSZczTf?ephemeral=false
+      - TS_EXTRA_ARGS=--advertise-tags=tag:container --reset
+      - TS_SERVE_CONFIG=/config/openclaw.json
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+    volumes:
+      - /docs/openclaw/tailscale/config:/config
+      - /docs/openclaw/tailscale/state:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    restart: unless-stopped
+    healthcheck:
+      test: tailscale status --peers=false --json | grep -q 'Online...true'
+    
+  openclaw:
+    image: ghcr.io/openclaw/openclaw:latest
+    container_name: openclaw
+    network_mode: service:openclaw_ts
+    depends_on:
+      - openclaw_ts
+    volumes:
+      - /docs/openclaw/data:/root/.openclaw
+    restart: unless-stopped

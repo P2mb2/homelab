@@ -73,6 +73,8 @@ services:
     healthcheck:
       test: redis-cli ping || exit 1
     restart: unless-stopped
+    volumes:
+      - /photos/redis:/data
 
   database:
     container_name: immich_postgres

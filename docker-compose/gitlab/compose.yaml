@@ -5,6 +5,11 @@ services:
     image: gitlab/gitlab-ce:17.3.7-ce.0
     container_name: gitlab
     restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
     environment:
       GITLAB_OMNIBUS_CONFIG: |
         external_url 'https://gitlab.jotapombo.org'
