@@ -5,11 +5,15 @@ services:
     container_name: openclaw_ts
     hostname: openclaw
     environment:
-      - TS_AUTHKEY=${TS_AUTHKEY}?ephemeral=false
+      - TS_AUTHKEY=tskey-client-xxxxxxxxxxxxxx?ephemeral=false
       - TS_EXTRA_ARGS=--advertise-tags=tag:container --reset
       - TS_SERVE_CONFIG=/config/openclaw.json
       - TS_STATE_DIR=/var/lib/tailscale
       - TS_USERSPACE=false
+      - TS_ACCEPT_DNS=false
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     volumes:
       - /docs/openclaw/tailscale/config:/config
       - /docs/openclaw/tailscale/state:/var/lib/tailscale
@@ -18,11 +22,10 @@ services:
       - net_admin
       - sys_module
     restart: unless-stopped
-    healthcheck:
-      test: tailscale status --peers=false --json | grep -q 'Online...true'
     
   openclaw:
-    image: ghcr.io/openclaw/openclaw:latest
+    build: .
+    image: openclaw:local-with-go
     container_name: openclaw
     network_mode: service:openclaw_ts
     depends_on:
@@ -31,4 +34,9 @@ services:
       - /docs/openclaw/data:/home/node/.openclaw
     environment:
       - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
+      - OPENCLAW_GATEWAY_BIND=lan
+      - OPENCLAW_GATEWAY_CONTROL_UI_ALLOWED_ORIGINS=https://openclaw.burro-iguana.ts.net
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    tty: true
+    stdin_open: true
     restart: unless-stopped
