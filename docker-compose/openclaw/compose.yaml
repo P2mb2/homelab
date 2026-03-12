@@ -5,7 +5,7 @@ services:
     container_name: openclaw_ts
     hostname: openclaw
     environment:
-      - TS_AUTHKEY=tskey-auth-kFGyCHMXC211CNTRL-iQBpnd8mGo2qNs3fCrz9n2B5ytSZczTf?ephemeral=false
+      - TS_AUTHKEY=${TS_AUTHKEY}?ephemeral=false
       - TS_EXTRA_ARGS=--advertise-tags=tag:container --reset
       - TS_SERVE_CONFIG=/config/openclaw.json
       - TS_STATE_DIR=/var/lib/tailscale
@@ -28,5 +28,7 @@ services:
     depends_on:
       - openclaw_ts
     volumes:
-      - /docs/openclaw/data:/root/.openclaw
+      - /docs/openclaw/data:/home/node/.openclaw
+    environment:
+      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
     restart: unless-stopped
