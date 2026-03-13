@@ -5,7 +5,7 @@ services:
     container_name: openclaw_ts
     hostname: openclaw
     environment:
-      - TS_AUTHKEY=tskey-client-xxxxxxxxxxxxxx?ephemeral=false
+      - TS_AUTHKEY=${TS_AUTHKEY}
       - TS_EXTRA_ARGS=--advertise-tags=tag:container --reset
       - TS_SERVE_CONFIG=/config/openclaw.json
       - TS_STATE_DIR=/var/lib/tailscale
@@ -24,8 +24,10 @@ services:
     restart: unless-stopped
     
   openclaw:
-    build: .
-    image: openclaw:local-with-go
+    # Official image:
+    # image: ghcr.io/openclaw/openclaw:latest
+    # Custom image (replace YOUR_GITHUB_USER with your lowercase GitHub username):
+    image: ghcr.io/p2mb2/openclaw-custom:latest
     container_name: openclaw
     network_mode: service:openclaw_ts
     depends_on:
@@ -35,8 +37,15 @@ services:
     environment:
       - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
       - OPENCLAW_GATEWAY_BIND=lan
-      - OPENCLAW_GATEWAY_CONTROL_UI_ALLOWED_ORIGINS=https://openclaw.burro-iguana.ts.net
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     tty: true
     stdin_open: true
     restart: unless-stopped
+    command: >
+      sh -c "node openclaw.mjs config set gateway.controlUi.allowedOrigins '[\"https://openclaw.burro-iguana.ts.net\"]' --strict-json &&
+             node openclaw.mjs config set gateway.controlUi.allowInsecureAuth true &&
+             node openclaw.mjs config set gateway.auth.token \"$OPENCLAW_GATEWAY_TOKEN\" &&
+             node openclaw.mjs config set channels.telegram.allowFrom '[737263887]' --strict-json &&
+             node openclaw.mjs config set channels.telegram.dmPolicy allowlist &&
+             node openclaw.mjs gateway --allow-unconfigured"
