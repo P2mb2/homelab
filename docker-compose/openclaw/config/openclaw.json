@@ -22,5 +22,33 @@
       "groupPolicy": "allowlist",
       "streaming": "partial"
     }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "github-copilot/claude-sonnet-4.5",
+        "fallbacks": [
+          "github-copilot/gemini-3-flash",
+          "github-copilot/gpt-5-mini"
+        ]
+      },
+      "models": {
+        "github-copilot/claude-sonnet-4.5": { "alias": "normal" },
+        "github-copilot/gemini-3-flash": { "alias": "barato" },
+        "github-copilot/gpt-5-mini": { "alias": "gratis" },
+        "github-copilot/claude-opus-4.6": { "alias": "caro" }
+      },
+      "heartbeat": {
+        "every": "30m",
+        "model": "github-copilot/gpt-5-mini",
+        "target": "last"
+      },
+      "subagents": {
+        "model": "github-copilot/gemini-3-flash",
+        "maxConcurrent": 1,
+        "archiveAfterMinutes": 60
+      },
+      "contextTokens": 200000
+    }
   }
 }

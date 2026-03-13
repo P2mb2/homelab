@@ -24,13 +24,14 @@
       restart: unless-stopped
       
     openclaw_config:
-      image: curlimages/curl:latest
+      container_name: openclaw_config
+      image: alpine:latest
       volumes:
-        - /docs/openclaw/data:/data
+        - /docs/openclaw/data:/root/.openclaw
       command: >
-        curl -fsSL
+        sh -c "wget -O /root/.openclaw/openclaw.json
         https://raw.githubusercontent.com/p2mb2/homelab/main/docker-compose/openclaw/config/openclaw.json
-        -o /data/openclaw.json
+        && chmod 644 /root/.openclaw/openclaw.json"
       restart: "no"
 
     openclaw:
@@ -44,8 +45,7 @@
         - openclaw_ts
         - openclaw_config
       volumes:
-        - /docs/openclaw/data:/home/node/.openclaw
-        - /docs/openclaw/authorized_keys:/root/.ssh/authorized_keys:ro
+        - /docs/openclaw/data:/root/.openclaw
       environment:
         - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
         - OPENCLAW_GATEWAY_BIND=lan
