@@ -1,0 +1,26 @@
+{
+  "gateway": {
+    "mode": "local",
+    "bind": "lan",
+    "auth": {
+      "mode": "token",
+      "token": "${OPENCLAW_GATEWAY_TOKEN}"
+    },
+    "controlUi": {
+      "allowedOrigins": ["https://openclaw.burro-iguana.ts.net"],
+      "allowInsecureAuth": true
+    }
+  },
+  "memory": {
+    "backend": "qmd"
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "dmPolicy": "allowlist",
+      "allowFrom": [737263887],
+      "groupPolicy": "allowlist",
+      "streaming": "partial"
+    }
+  }
+}

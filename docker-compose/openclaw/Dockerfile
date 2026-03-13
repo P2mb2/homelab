@@ -15,7 +15,16 @@ RUN apt-get update && apt-get install -y \
     vim \
     zsh \
     openssh-server \
+    libsqlite3-dev \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Bun (required for QMD)
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH=$PATH:/root/.bun/bin
+
+# Install QMD (local-first memory search backend for OpenClaw)
+RUN bun install -g https://github.com/tobi/qmd
+RUN ln -sf /root/.bun/bin/qmd /usr/local/bin/qmd
 
 # Configure SSH
 RUN mkdir -p /var/run/sshd /root/.ssh && \
@@ -24,8 +33,10 @@ RUN mkdir -p /var/run/sshd /root/.ssh && \
     sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config && \
     ssh-keygen -A
 
-COPY authorized_keys /root/.ssh/authorized_keys
-RUN chmod 600 /root/.ssh/authorized_keys
+# authorized_keys is NOT baked into the image.
+# Mount it at runtime via compose: /root/.ssh/authorized_keys
+# This allows key management without rebuilding the image.
+RUN touch /root/.ssh/authorized_keys && chmod 600 /root/.ssh/authorized_keys
 
 # Entrypoint: starts sshd then runs original container command
 COPY entrypoint.sh /entrypoint.sh

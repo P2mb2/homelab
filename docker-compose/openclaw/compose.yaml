@@ -1,51 +1,56 @@
-version: "3.7"
-services:
-  openclaw_ts:
-    image: tailscale/tailscale:latest
-    container_name: openclaw_ts
-    hostname: openclaw
-    environment:
-      - TS_AUTHKEY=${TS_AUTHKEY}
-      - TS_EXTRA_ARGS=--advertise-tags=tag:container --reset
-      - TS_SERVE_CONFIG=/config/openclaw.json
-      - TS_STATE_DIR=/var/lib/tailscale
-      - TS_USERSPACE=false
-      - TS_ACCEPT_DNS=false
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
-    volumes:
-      - /docs/openclaw/tailscale/config:/config
-      - /docs/openclaw/tailscale/state:/var/lib/tailscale
-      - /dev/net/tun:/dev/net/tun
-    cap_add:
-      - net_admin
-      - sys_module
-    restart: unless-stopped
-    
-  openclaw:
-    # Official image:
-    # image: ghcr.io/openclaw/openclaw:latest
-    # Custom image (replace YOUR_GITHUB_USER with your lowercase GitHub username):
-    image: ghcr.io/p2mb2/openclaw-custom:latest
-    container_name: openclaw
-    network_mode: service:openclaw_ts
-    depends_on:
-      - openclaw_ts
-    volumes:
-      - /docs/openclaw/data:/home/node/.openclaw
-    environment:
-      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
-      - OPENCLAW_GATEWAY_BIND=lan
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-    tty: true
-    stdin_open: true
-    restart: unless-stopped
-    command: >
-      sh -c "node openclaw.mjs config set gateway.controlUi.allowedOrigins '[\"https://openclaw.burro-iguana.ts.net\"]' --strict-json &&
-             node openclaw.mjs config set gateway.controlUi.allowInsecureAuth true &&
-             node openclaw.mjs config set gateway.auth.token \"$OPENCLAW_GATEWAY_TOKEN\" &&
-             node openclaw.mjs config set channels.telegram.allowFrom '[737263887]' --strict-json &&
-             node openclaw.mjs config set channels.telegram.dmPolicy allowlist &&
-             node openclaw.mjs gateway --allow-unconfigured"
+  version: "3.7"
+  services:
+    openclaw_ts:
+      image: tailscale/tailscale:latest
+      container_name: openclaw_ts
+      hostname: openclaw
+      environment:
+        - TS_AUTHKEY=${TS_AUTHKEY}
+        - TS_EXTRA_ARGS=--advertise-tags=tag:container --reset
+        - TS_SERVE_CONFIG=/config/openclaw.json
+        - TS_STATE_DIR=/var/lib/tailscale
+        - TS_USERSPACE=false
+        - TS_ACCEPT_DNS=false
+      dns:
+        - 8.8.8.8
+        - 1.1.1.1
+      volumes:
+        - /docs/openclaw/tailscale/config:/config
+        - /docs/openclaw/tailscale/state:/var/lib/tailscale
+        - /dev/net/tun:/dev/net/tun
+      cap_add:
+        - net_admin
+        - sys_module
+      restart: unless-stopped
+      
+    openclaw_config:
+      image: curlimages/curl:latest
+      volumes:
+        - /docs/openclaw/data:/data
+      command: >
+        curl -fsSL
+        https://raw.githubusercontent.com/p2mb2/homelab/main/docker-compose/openclaw/config/openclaw.json
+        -o /data/openclaw.json
+      restart: "no"
+
+    openclaw:
+      # Official image:
+      # image: ghcr.io/openclaw/openclaw:latest
+      # Custom image (replace YOUR_GITHUB_USER with your lowercase GitHub username):
+      image: ghcr.io/p2mb2/openclaw-custom:latest
+      container_name: openclaw
+      network_mode: service:openclaw_ts
+      depends_on:
+        - openclaw_ts
+        - openclaw_config
+      volumes:
+        - /docs/openclaw/data:/home/node/.openclaw
+        - /docs/openclaw/authorized_keys:/root/.ssh/authorized_keys:ro
+      environment:
+        - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
+        - OPENCLAW_GATEWAY_BIND=lan
+        - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+        - OPENAI_API_KEY=${OPENAI_API_KEY}
+      tty: true
+      stdin_open: true
+      restart: unless-stopped
