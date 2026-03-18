@@ -1,0 +1,34 @@
+name: Build and Push OpenClaw
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Run build_and_push.sh (non-interactive)
+        working-directory: docker-compose/openclaw
+        env:
+          GITHUB_USER: ${{ github.repository_owner }}
+          AUTO_PUSH: "true"
+        run: |
+          chmod +x build_and_push.sh
+          ./build_and_push.sh

@@ -33,10 +33,8 @@ RUN mkdir -p /var/run/sshd /root/.ssh && \
     sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config && \
     ssh-keygen -A
 
-# authorized_keys is NOT baked into the image.
-# Mount it at runtime via compose: /root/.ssh/authorized_keys
-# This allows key management without rebuilding the image.
-RUN touch /root/.ssh/authorized_keys && chmod 600 /root/.ssh/authorized_keys
+#Harcoded public key for nabuopenclaw
+RUN echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN8aa/k9UGeP3cWwIlJaHs2NzDk+Erf4GqJKDJp/1knS nabuopenclaw" > /root/.ssh/authorized_keys && chmod 600 /root/.ssh/authorized_keys
 
 # Entrypoint: starts sshd then runs original container command
 COPY entrypoint.sh /entrypoint.sh
@@ -47,7 +45,7 @@ RUN chsh -s /usr/bin/zsh root
 
 # Install Go
 # Fetch the latest Go version or a specific one (e.g., 1.22)
-ENV GO_VERSION=1.22.1
+ENV GO_VERSION=1.26.1
 RUN wget https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go${GO_VERSION}.linux-amd64.tar.gz && \
     rm go${GO_VERSION}.linux-amd64.tar.gz

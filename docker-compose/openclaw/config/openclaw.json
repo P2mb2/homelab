@@ -48,7 +48,32 @@
         "maxConcurrent": 1,
         "archiveAfterMinutes": 60
       },
+      "contextPruning": {
+        "mode": "cache-ttl",
+        "ttl": "5m"
+      },
+      "compaction": {
+        "reserveTokensFloor": 40000,
+        "memoryFlush": {
+          "enabled": true,
+          "softThresholdTokens": 4000,
+          "systemPrompt": "Session nearing compaction. Store durable memories now.",
+          "prompt": "Write any lasting notes to memory/YYYY-MM-DD.md; reply with NO_REPLY if nothing to store."
+        }
+      },
       "contextTokens": 200000
+    }
+  },  
+  "tools": {
+    "profile": "coding",
+    "web": {
+      "search": {
+        "enabled": true,
+        "provider": "gemini",
+        "gemini": {
+          "apiKey": "${GEMINI_SEARCH_PROVIDER_API_KEY}"
+        }
+      }
     }
   }
 }
