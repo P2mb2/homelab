@@ -27,7 +27,7 @@ jobs:
       - name: Run build_and_push.sh (non-interactive)
         working-directory: docker-compose/openclaw
         env:
-          GITHUB_USER: ${{ github.repository_owner }}
+          GITHUB_USER: ${{ toLower(github.repository_owner) }}
           AUTO_PUSH: "true"
         run: |
           chmod +x build_and_push.sh

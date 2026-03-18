@@ -3,6 +3,8 @@
 # Configuration - can be overridden via environment variable GITHUB_USER
 # Default kept for backwards compatibility; set GITHUB_USER in the environment to override
 GITHUB_USER="${GITHUB_USER:-p2mb2}"
+# Ensure lowercase (Docker/GHCR requires lowercase repository names)
+GITHUB_USER="${GITHUB_USER,,}"
 IMAGE_NAME="openclaw-custom"
 TAG="latest"
 
